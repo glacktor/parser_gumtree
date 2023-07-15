@@ -3,7 +3,9 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
 from seleniumwire import webdriver
+import time
 class Ad:
     def __init__(self, element: WebElement):
         self.element = element
@@ -63,7 +65,6 @@ class Ad:
         driver.switch_to.window(current_window)
         return 1
 
-
     def print_info(self):
         print("Title:", self.item_name)
         print("Price:", self.price)
@@ -79,8 +80,7 @@ class Ad:
         car_brands = ["audi","mg","fuso", "bmw", "mercedes", "volkswagen", "ford", "chevrolet", "toyota", "honda", "nissan",
                       "subaru", "hyundai", "kia", "mazda", "mitsubishi", "lexus", "jaguar", "land rover",
                       "harley-davidson", "yamaha", "honda", "suzuki", "kawasaki", "ducati","haval","jeep",
-                      "holden","trailer","peugeot","ram","caravan","alfa"]
-
+                      "holden","trailer","peugeot","ram","caravan","alfa","wagon"]
 
         keywords = car_brands
 
@@ -149,28 +149,50 @@ def cycle_one(ads,driver):
         else:
             ads.remove(ad)
 
-def proxy_setup():
-    proxy_ip = "45.138.156.83"
-    proxy_port = 63818
+def proxy_setup(ans):
+    proxy_ip = ["45.138.156.83", "195.208.181.150"]
+    proxy_port = [63818, 63182]
     proxy_username = "ibYmjwaQ"
     proxy_password = "muQmJ4gV"
-    proxy_options = {
+    proxy_options1 = {
         'proxy': {
-            'http': f'http://{proxy_username}:{proxy_password}@{proxy_ip}:{proxy_port}',
+            'http': f'http://{proxy_username}:{proxy_password}@{proxy_ip[0]}:{proxy_port[0]}',
+            'https': f'https://{proxy_username}:{proxy_password}@{proxy_ip[0]}:{proxy_port[0]}'
+        },
+        'executable_manager': "/Users/nikmarf/pythonProject4/chromedriver/chromedriver",
+    }
+    proxy_options2 = {
+        'proxy': {
+            'http': f'http://{proxy_username}:{proxy_password}@{proxy_ip[1]}:{proxy_port[1]}',
             'https': f'https://{proxy_username}:{proxy_password}@{proxy_ip}:{proxy_port}'
         },
         'executable_manager': "/Users/nikmarf/pythonProject4/chromedriver/chromedriver",
     }
-    return proxy_options
+    if ans == 1:
+        return proxy_options1
+    if ans == 2:
+        return proxy_options2
 
-urltst = "https://www.gumtree.com.au/s-ad/sippy-downs/armchairs/wicker-couch-and-couches/1314463456"
+
+chrome_options = Options()
+# chrome_options.add_argument("--headless")
+
 url = "https://www.gumtree.com.au/s-r500"
-driver = webdriver.Chrome(seleniumwire_options=proxy_setup())
-driver.get(url)
-ad_collection_section = driver.find_element(By.CLASS_NAME, "search-results-page__user-ad-collection")
-ad_elements = ad_collection_section.find_elements(By.CLASS_NAME, "user-ad-row-new-design")
+driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=proxy_setup(1))
+ads_finished = {}
+while True:
+    driver.get(url)
+    ad_collection_section = driver.find_element(By.CLASS_NAME, "search-results-page__user-ad-collection")
+    ad_elements = ad_collection_section.find_elements(By.CLASS_NAME, "user-ad-row-new-design")
+    ads = []
+    cycle_one(ads, driver)
+    driver.refresh()
+    for ad in ads:
+        if ad.id not in ads_finished:
+            ads_finished[ad.id] = ad
+            print(ads_finished[ad.id])
 
-ads = []
-cycle_one(ads, driver)
+    time.sleep(60)
+
+
 driver.quit()
-omg
