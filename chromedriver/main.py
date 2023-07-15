@@ -20,6 +20,17 @@ class Ad:
         self.id = None
 
 
+    def get_info(self):
+        return {
+            "item_name": self.item_name,
+            "price": self.price,
+            "publication_time": self.publication_time,
+            "ad_link": self.ad_link,
+            "location": self.location,
+            "id": self.id,
+            "date_registered": self.date_registered
+        }
+
     def extract_data_intital(self):  # extract data for first time ( without going into )
         self.item_name = self.element.find_element(By.CLASS_NAME, "user-ad-row-new-design__title-span").text
         try:
@@ -80,7 +91,7 @@ class Ad:
         car_brands = ["audi","mg","fuso", "bmw", "mercedes", "volkswagen", "ford", "chevrolet", "toyota", "honda", "nissan",
                       "subaru", "hyundai", "kia", "mazda", "mitsubishi", "lexus", "jaguar", "land rover",
                       "harley-davidson", "yamaha", "honda", "suzuki", "kawasaki", "ducati","haval","jeep",
-                      "holden","trailer","peugeot","ram","caravan","alfa","wagon"]
+                      "holden","trailer","peugeot","ram","caravan","alfa","wagon","mitsubisi","hlv","takeuchi"]
 
         keywords = car_brands
 
@@ -144,9 +155,7 @@ def cycle_one(ads,driver):
             print(f"An error occurred while processing an ad: {str(e)}")
     for ad in ads:
         flag = ad.click_ad(driver)
-        if flag:
-            ad.print_info()
-        else:
+        if not flag:
             ads.remove(ad)
 
 def proxy_setup(ans):
@@ -176,11 +185,16 @@ def proxy_setup(ans):
 
 chrome_options = Options()
 # chrome_options.add_argument("--headless")
-
 url = "https://www.gumtree.com.au/s-r500"
 driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=proxy_setup(1))
-ads_finished = {}
-while True:
+ads_finished = {} #словарь в котором по ключу ( айди) можно найти объект ad, .get_info() метод возвращает словарь со всеми полями класса
+
+used_ads = []
+'''
+ # used_ads - здесь крч будут хранится id после отправки в тг соответсвенно. типо скорее всего надо энивей хранить
+ данные в тексте. но я хз какую логику ты применишь в отправке в тг, так что пока так оставил
+'''
+while True: #бесконечный цикл
     driver.get(url)
     ad_collection_section = driver.find_element(By.CLASS_NAME, "search-results-page__user-ad-collection")
     ad_elements = ad_collection_section.find_elements(By.CLASS_NAME, "user-ad-row-new-design")
@@ -188,9 +202,11 @@ while True:
     cycle_one(ads, driver)
     driver.refresh()
     for ad in ads:
-        if ad.id not in ads_finished:
-            ads_finished[ad.id] = ad
-            print(ads_finished[ad.id])
+        if ad.id not in ads_finished.keys():
+            if ad.id not in used_ads:
+                ads_finished[ad.id] = ad
+                ads_finished[ad.id].print_info()
+
 
     time.sleep(60)
 
