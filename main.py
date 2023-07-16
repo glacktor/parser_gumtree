@@ -5,7 +5,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from seleniumwire import webdriver
+from telegram import Bot
 import time
+import telegram
+import asyncio
+import aiogram
 class Ad:
     def __init__(self, element: WebElement):
         self.element = element
@@ -195,34 +199,51 @@ used_ads = []
  # used_ads - здесь крч будут хранится id после отправки в тг соответсвенно. типо скорее всего надо энивей хранить
  данные в тексте. но я хз какую логику ты применишь в отправке в тг, так что пока так оставил
 '''
+#telegram part
+bot = aiogram.Bot(token='6237128583:AAFtVuZobkQNwyHIRgzshAfoihpWRyJ-4VI')
 
 
-def messege_to_telegram(self):
-    print("Title:", self.item_name)
-    print("Price:", self.price)
-    print("Location:", self.location)
-    print("P_time:", self.publication_time)
-    print("Link:", self.ad_link)
-    print("Id:", self.id)
-    print("Registred_date", self.date_registered)
-    print("----------------------")
 
 
-while True: #бесконечный цикл
-    driver.get(url)
-    ad_collection_section = driver.find_element(By.CLASS_NAME, "search-results-page__user-ad-collection")
-    ad_elements = ad_collection_section.find_elements(By.CLASS_NAME, "user-ad-row-new-design")
-    ads = []
-    cycle_one(ads, driver)
-    driver.refresh()
-    for ad in ads:
-        if ad.id not in ads_finished.keys():
-            if ad.id not in used_ads:
-                ads_finished[ad.id] = ad
-                ads_finished[ad.id].print_info()
+async def send_message(chat_id, text):
+    await bot.send_message(chat_id=chat_id, text=text)
+
+async def main():
+    while True:
+        driver.get(url)
+        ad_collection_section = driver.find_element(By.CLASS_NAME, "search-results-page__user-ad-collection")
+        ad_elements = ad_collection_section.find_elements(By.CLASS_NAME, "user-ad-row-new-design")
+        ads = []
+        cycle_one(ads, driver)
+        driver.refresh()
+        for ad in ads:
+            if ad.id not in ads_finished.keys():
+                if ad.id not in used_ads:
+                    ads_finished[ad.id] = ad
+                    message = "Title: {}\nPrice: {}\nLocation: {}\nP_time: {}\nLink: {}\nId: {}\nRegistred_date: {}".format(
+                        ad.item_name, ad.price, ad.location, ad.publication_time, ad.ad_link, ad.id, ad.date_registered)
+                    await send_message(770310010, message)
+                    await send_message(770310010, "test")
+                    ads_finished[ad.id].print_info()
+
+asyncio.run(main())
 
 
-    time.sleep(60)
+# while True: #бесконечный цикл
+#     driver.get(url)
+#     ad_collection_section = driver.find_element(By.CLASS_NAME, "search-results-page__user-ad-collection")
+#     ad_elements = ad_collection_section.find_elements(By.CLASS_NAME, "user-ad-row-new-design")
+#     ads = []
+#     cycle_one(ads, driver)
+#     driver.refresh()
+#     for ad in ads:
+#         if ad.id not in ads_finished.keys():
+#             if ad.id not in used_ads:
+#                 ads_finished[ad.id] = ad
+#                 ads_finished[ad.id].print_info()
+
+
+time.sleep(60)
 
 
 driver.quit()
