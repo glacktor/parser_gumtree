@@ -10,6 +10,8 @@ import time
 import telegram
 import asyncio
 import aiogram
+
+
 class Ad:
     def __init__(self, element: WebElement):
         self.element = element
@@ -22,7 +24,6 @@ class Ad:
         self.ad_link = None
         self.location = None
         self.id = None
-
 
     def get_info(self):
         return {
@@ -39,8 +40,8 @@ class Ad:
         self.item_name = self.element.find_element(By.CLASS_NAME, "user-ad-row-new-design__title-span").text
         try:
             self.price = self.element.find_element(By.CLASS_NAME, "user-ad-price-new-design__price").text
-        except Exception: #если нет цены то нахуй скипается
-                return 0
+        except Exception:  # если нет цены то нахуй скипается
+            return 0
         self.publication_time = self.element.find_element(By.CLASS_NAME, "user-ad-row-new-design__age").text
         self.ad_link = self.element.get_attribute("href")
         self.location = self.element.find_element(By.CLASS_NAME, "user-ad-row-new-design__location").text
@@ -89,14 +90,16 @@ class Ad:
         print("Id:", self.id)
         print("Registred_date", self.date_registered)
         print("----------------------")
+
     # questions about everything
 
     def is_car_ad(self) -> bool:
-        car_brands = ["audi","mg","fuso", "bmw", "mercedes", "volkswagen", "ford", "chevrolet", "toyota", "honda", "nissan",
+        car_brands = ["audi", "mg", "fuso", "bmw", "mercedes", "volkswagen", "ford", "chevrolet", "toyota", "honda",
+                      "nissan",
                       "subaru", "hyundai", "kia", "mazda", "mitsubishi", "lexus", "jaguar", "land rover",
-                      "harley-davidson", "yamaha", "honda", "suzuki", "kawasaki", "ducati","haval","jeep",
-                      "holden","trailer","peugeot","ram","caravan","alfa","wagon","mitsubisi","hlv","takeuchi","skoda" ,
-                      "wanted"]
+                      "harley-davidson", "yamaha", "honda", "suzuki", "kawasaki", "ducati", "haval", "jeep",
+                      "holden", "trailer", "peugeot", "ram", "caravan", "alfa", "wagon", "mitsubisi", "hlv", "takeuchi",
+                      "skoda","wanted", "mustang"]
 
         keywords = car_brands
 
@@ -137,7 +140,7 @@ class Ad:
         return False
 
     def is_ad_ok(self) -> bool:
-        if not (self.is_car_ad() or self.is_pet_ad() or self.is_job_offer_ad()  or self.is_house_rental_ad()):
+        if not (self.is_car_ad() or self.is_pet_ad() or self.is_job_offer_ad() or self.is_house_rental_ad()):
             if self.price != "Free":
                 return True
         else:
@@ -149,7 +152,8 @@ def print_ads(ad_elements):
         print(ad_element.get_attribute("outerHTML"))
         print()
 
-def cycle_one(ads,driver):
+
+def cycle_one(ads, driver, ad_elements):
     for ad_element in ad_elements:
         try:
             ad = Ad(ad_element)
@@ -162,6 +166,7 @@ def cycle_one(ads,driver):
         flag = ad.click_ad(driver)
         if not flag:
             ads.remove(ad)
+
 
 def proxy_setup(ans):
     proxy_ip = ["45.138.156.83", "195.208.181.150"]
@@ -192,21 +197,20 @@ chrome_options = Options()
 # chrome_options.add_argument("--headless")
 url = "https://www.gumtree.com.au/s-r500"
 driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=proxy_setup(1))
-ads_finished = {} #словарь в котором по ключу ( айди) можно найти объект ad, .get_info() метод возвращает словарь со всеми полями класса
+ads_finished = {}  # словарь в котором по ключу ( айди) можно найти объект ad, .get_info() метод возвращает словарь со всеми полями класса
 
 used_ads = []
 '''
  # used_ads - здесь крч будут хранится id после отправки в тг соответсвенно. типо скорее всего надо энивей хранить
  данные в тексте. но я хз какую логику ты применишь в отправке в тг, так что пока так оставил
 '''
-#telegram part
+# telegram part
 bot = aiogram.Bot(token='6237128583:AAFtVuZobkQNwyHIRgzshAfoihpWRyJ-4VI')
-
-
 
 
 async def send_message(chat_id, text):
     await bot.send_message(chat_id=chat_id, text=text)
+
 
 async def main():
     while True:
@@ -214,7 +218,7 @@ async def main():
         ad_collection_section = driver.find_element(By.CLASS_NAME, "search-results-page__user-ad-collection")
         ad_elements = ad_collection_section.find_elements(By.CLASS_NAME, "user-ad-row-new-design")
         ads = []
-        cycle_one(ads, driver)
+        cycle_one(ads, driver, ad_elements)
         driver.refresh()
         for ad in ads:
             if ad.id not in ads_finished.keys():
@@ -222,12 +226,12 @@ async def main():
                     ads_finished[ad.id] = ad
                     message = "Title: {}\nPrice: {}\nLocation: {}\nP_time: {}\nLink: {}\nId: {}\nRegistred_date: {}".format(
                         ad.item_name, ad.price, ad.location, ad.publication_time, ad.ad_link, ad.id, ad.date_registered)
-                    await send_message(770310010, message)
                     await send_message(770310010, "test")
+                    await send_message(770310010, message)
                     ads_finished[ad.id].print_info()
 
-asyncio.run(main())
 
+asyncio.run(main())
 
 # while True: #бесконечный цикл
 #     driver.get(url)
@@ -244,6 +248,5 @@ asyncio.run(main())
 
 
 time.sleep(60)
-
 
 driver.quit()
