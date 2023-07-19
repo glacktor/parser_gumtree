@@ -10,6 +10,8 @@ import time
 import telegram
 import asyncio
 import aiogram
+import random
+import requests
 
 
 class Ad:
@@ -199,20 +201,22 @@ url = "https://www.gumtree.com.au/s-r500"
 driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=proxy_setup(1))
 ads_finished = {}  # словарь в котором по ключу ( айди) можно найти объект ad, .get_info() метод возвращает словарь со всеми полями класса
 
-used_ads = []
+
 '''
  # used_ads - здесь крч будут хранится id после отправки в тг соответсвенно. типо скорее всего надо энивей хранить
  данные в тексте. но я хз какую логику ты применишь в отправке в тг, так что пока так оставил
 '''
 # telegram part
 bot = aiogram.Bot(token='6237128583:AAFtVuZobkQNwyHIRgzshAfoihpWRyJ-4VI')
-
+chat_id = [770310010]
 
 async def send_message(chat_id, text):
     await bot.send_message(chat_id=chat_id, text=text)
 
-
 async def main():
+    used_ads = []
+    used_chats = []
+
     while True:
         driver.get(url)
         ad_collection_section = driver.find_element(By.CLASS_NAME, "search-results-page__user-ad-collection")
@@ -220,19 +224,27 @@ async def main():
         ads = []
         cycle_one(ads, driver, ad_elements)
         driver.refresh()
+
         for ad in ads:
             if ad.id not in ads_finished.keys():
                 if ad.id not in used_ads:
                     ads_finished[ad.id] = ad
                     message = "Title: {}\nPrice: {}\nLocation: {}\nP_time: {}\nLink: {}\nId: {}\nRegistred_date: {}".format(
                         ad.item_name, ad.price, ad.location, ad.publication_time, ad.ad_link, ad.id, ad.date_registered)
-                    await send_message(770310010, "test")
-                    await send_message(770310010, message)
-                    ads_finished[ad.id].print_info()
 
+                    random_index = random.randint(0, len(chat_id) - 1)
+                    selected_chat_id = chat_id[random_index]
 
+                    if selected_chat_id not in used_chats:
+                        used_chats.append(selected_chat_id)
+
+                        await send_message(selected_chat_id, message)
+
+                        used_ads.append(ad.id)
+
+        if len(used_chats) == len(chat_id):
+            used_chats = []
 asyncio.run(main())
-
 # while True: #бесконечный цикл
 #     driver.get(url)
 #     ad_collection_section = driver.find_element(By.CLASS_NAME, "search-results-page__user-ad-collection")
